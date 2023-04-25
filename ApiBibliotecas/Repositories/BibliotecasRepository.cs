@@ -65,9 +65,6 @@ namespace ApiBibliotecas.Repositorys
 
 
 
-
-
-
         //BIBLIOTECAS
 
         public async Task<List<Biblioteca>> GetBibliotecasAsync()
@@ -114,22 +111,20 @@ namespace ApiBibliotecas.Repositorys
             return await this.context.LibrosDef.Where(x => x.ID_LIBRO == id).FirstOrDefaultAsync();
         }
 
-
-
-        public List<LibroDisponibilidad> GetLibrosBiblioteca(int id)
+        public async Task<List<LibroDisponibilidad>> GetLibrosBibliotecaAsync(int id)
         {
             string sql = "SP_BUSCARLIBRO @ID_BIBLIOTECA";
             SqlParameter p = new SqlParameter("@ID_BIBLIOTECA", id);
             var consulta = this.context.LibroDisponibilidad.FromSqlRaw(sql, p);
-            return consulta.AsEnumerable().ToList();
+            return await consulta.ToListAsync();
         }
 
-        public List<LibroDisponibilidad> SearchLibroBiblioteca(int id, string input, char option)
+        public async Task<List<LibroDisponibilidad>> SearchLibroBibliotecaAsync(int id, string input, char option)
         {
             string sql = "";
             if (input == null)
             {
-                return GetLibrosBiblioteca(id);
+                return await GetLibrosBibliotecaAsync(id);
             }
             if (option == 'T')
             {
@@ -142,14 +137,12 @@ namespace ApiBibliotecas.Repositorys
             SqlParameter p1 = new SqlParameter("@INPUT", input);
             SqlParameter p2 = new SqlParameter("@ID_BIBLIOTECA", id);
             var consulta = this.context.LibroDisponibilidad.FromSqlRaw(sql, p1, p2);
-            return consulta.AsEnumerable().ToList();
+            return await consulta.ToListAsync();
         }
 
 
 
-
-
-
+        //VALORACIONES & COMENTARIOS
 
         public int GetValoraciones(int id)
         {
@@ -160,13 +153,13 @@ namespace ApiBibliotecas.Repositorys
             return cuenta;
         }
 
-        public List<Comentario> GetComentarios(int id, string dni)
+        public async Task<List<Comentario>> GetComentariosLikeAsync(int id, string dni)
         {
             string sql = "SP_GETCOMENTARIOSLIBRO @ID_LIBRO ,@DNI_USUARIO";
             SqlParameter p1 = new SqlParameter("@ID_LIBRO", id);
             SqlParameter p2 = new SqlParameter("@DNI_USUARIO", dni ?? (object)DBNull.Value);
             var consulta = this.context.Comentarios.FromSqlRaw(sql, p1, p2);
-            return consulta.AsEnumerable().ToList();
+            return await consulta.ToListAsync();
         }
 
         public void LikeComentario(int orden, int idComentario, string dni)
@@ -177,6 +170,41 @@ namespace ApiBibliotecas.Repositorys
             SqlParameter p3 = new SqlParameter("@DNI_USUARIO", dni);
             int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2, p3);
         }
+
+
+
+
+
+        public void PostComentario(int idLibro, string dni, DateTime fecha, string textoComentario, int rating)
+        {
+            string sql = "SP_CREATECOMENTARIORESENIA @ID_LIBRO, @DNI_USUARIO, @FECHA_COMENTARIO, @MENSAJE, @PUNTUACION";
+            SqlParameter p1 = new SqlParameter("@ID_LIBRO", idLibro);
+            SqlParameter p2 = new SqlParameter("@DNI_USUARIO", dni);
+            SqlParameter p3 = new SqlParameter("@FECHA_COMENTARIO", fecha);
+            SqlParameter p4 = new SqlParameter("@MENSAJE", textoComentario ?? (object)DBNull.Value);
+            SqlParameter p5 = new SqlParameter("@PUNTUACION", rating);
+            int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2, p3, p4, p5);
+        }
+
+        public int NComentarios(string id)
+        {
+            return this.context.ComentariosBasico.Where(x => x.DNI_USUARIO.Equals(id)).Count();
+        }
+
+        public int NReseñas(string id)
+        {
+            return this.context.Valoraciones.Where(x => x.DNI_USUARIO.Equals(id)).Count();
+        }
+
+        public void DeleteComentario(int id)
+        {
+            string sql = "SP_DELETECOMENTARIO @ID_COMENTARIO";
+            SqlParameter p1 = new SqlParameter("@ID_COMENTARIO", id);
+            int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1);
+        }
+
+
+
 
         public List<Autor> GetAutores()
         {
@@ -191,16 +219,6 @@ namespace ApiBibliotecas.Repositorys
             return consulta.AsEnumerable().ToList();
         }
 
-        public void PostComentario(int idLibro, string dni, DateTime fecha, string textoComentario, int rating)
-        {
-            string sql = "SP_CREATECOMENTARIORESENIA @ID_LIBRO, @DNI_USUARIO, @FECHA_COMENTARIO, @MENSAJE, @PUNTUACION";
-            SqlParameter p1 = new SqlParameter("@ID_LIBRO", idLibro);
-            SqlParameter p2 = new SqlParameter("@DNI_USUARIO", dni);
-            SqlParameter p3 = new SqlParameter("@FECHA_COMENTARIO", fecha);
-            SqlParameter p4 = new SqlParameter("@MENSAJE", textoComentario ?? (object)DBNull.Value);
-            SqlParameter p5 = new SqlParameter("@PUNTUACION", rating);
-            int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2, p3, p4, p5);
-        }
 
         public int LibroDeseo(int idLibro, string dni)
         {
@@ -230,15 +248,7 @@ namespace ApiBibliotecas.Repositorys
         }
 
 
-        public int NComentarios(string id)
-        {
-            return this.context.ComentariosBasico.Where(x => x.DNI_USUARIO.Equals(id)).Count();
-        }
 
-        public int NReseñas(string id)
-        {
-            return this.context.Valoraciones.Where(x => x.DNI_USUARIO.Equals(id)).Count();
-        }
 
         public int NLibrosLeidos(string id)
         {
@@ -258,12 +268,7 @@ namespace ApiBibliotecas.Repositorys
             return this.context.ComentariosBasico.Where(x => x.DNI_USUARIO.Equals(id)).ToList();
         }
 
-        public void DeleteComentario(int id)
-        {
-            string sql = "SP_DELETECOMENTARIO @ID_COMENTARIO";
-            SqlParameter p1 = new SqlParameter("@ID_COMENTARIO", id);
-            int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1);
-        }
+
 
         public List<LibroDeseo> GetFavoritos(string id)
         {

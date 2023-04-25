@@ -40,5 +40,20 @@ namespace ApiBibliotecas.Controllers
             return await this.repo.GetDatosLibroDefAsync(id);
         }
 
+
+        [HttpGet]
+        [Route("[action]/{idbiblioteca}")]
+        public async Task<ActionResult<List<LibroDisponibilidad>>> GetLibrosDispoBiblioteca(int idbiblioteca)
+        {
+            return await this.repo.GetLibrosBibliotecaAsync(idbiblioteca);
+        }
+
+
+        [HttpGet]
+        [Route("[action]/{idbiblioteca}/{input}/{opcion}")]
+        public async Task<ActionResult<List<LibroDisponibilidad>>> GetLibrosDispoBiblioteca(int idbiblioteca, string input, char opcion)
+        {
+            return await this.repo.SearchLibroBibliotecaAsync(idbiblioteca,input,opcion);
+        }
     }
 }
