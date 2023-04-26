@@ -55,5 +55,25 @@ namespace ApiBibliotecas.Controllers
         {
             return await this.repo.SearchLibroBibliotecaAsync(idbiblioteca,input,opcion);
         }
+
+
+        [HttpGet]
+        [Route("[action]/{idautor}")]
+        public async Task<ActionResult<List<LibroDefault>>> GetLibrosAutor(int idautor)
+        {
+            return await this.repo.GetLibrosAutor(idautor);
+        }
+
+
+        [HttpGet]
+        [Route("[action]/{idautor}/{input}")]
+        public async Task<ActionResult<List<LibroDefault>>> SearchLibroAutorNombre(int idautor, string input)
+        {
+            return await this.repo.SearchLibroAutorNombre(idautor,input);
+        }
+
+
+
+
     }
 }

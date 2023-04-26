@@ -64,9 +64,7 @@ namespace ApiBibliotecas.Repositorys
 
 
 
-
         //BIBLIOTECAS
-
         public async Task<List<Biblioteca>> GetBibliotecasAsync()
         {
             return await this.context.Bibliotecas.ToListAsync();
@@ -90,9 +88,7 @@ namespace ApiBibliotecas.Repositorys
 
 
 
-
         //LIBROS
-
         public async Task<List<LibroDefault>> GetLibrosTodosAsync()
         {
             return await this.context.LibrosDef.ToListAsync();
@@ -140,10 +136,23 @@ namespace ApiBibliotecas.Repositorys
             return await consulta.ToListAsync();
         }
 
+        public async Task<List<LibroDefault>> GetLibrosAutor(int id)
+        {
+            return await this.context.LibrosDef.Where(x => x.ID_AUTOR == id).ToListAsync();
+        }
+
+        public async Task<List<LibroDefault>> SearchLibroAutorNombre(int id, string input)
+        {
+            string sql = "SP_SEARCHLIBRODEAUTOR @ID_AUTOR, @INPUT";
+            SqlParameter p1 = new SqlParameter("@ID_AUTOR", id);
+            SqlParameter p2 = new SqlParameter("@INPUT", input);
+            var consulta = this.context.LibrosDef.FromSqlRaw(sql, p1, p2);
+            return await consulta.ToListAsync();
+        }
+
 
 
         //VALORACIONES & COMENTARIOS
-
         public int GetValoraciones(int id)
         {
             var consulta = from data in this.context.Valoraciones.AsEnumerable()
@@ -171,10 +180,6 @@ namespace ApiBibliotecas.Repositorys
             int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2, p3);
         }
 
-
-
-
-
         public void PostComentario(int idLibro, string dni, DateTime fecha, string textoComentario, int rating)
         {
             string sql = "SP_CREATECOMENTARIORESENIA @ID_LIBRO, @DNI_USUARIO, @FECHA_COMENTARIO, @MENSAJE, @PUNTUACION";
@@ -186,16 +191,6 @@ namespace ApiBibliotecas.Repositorys
             int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2, p3, p4, p5);
         }
 
-        public int NComentarios(string id)
-        {
-            return this.context.ComentariosBasico.Where(x => x.DNI_USUARIO.Equals(id)).Count();
-        }
-
-        public int NReseñas(string id)
-        {
-            return this.context.Valoraciones.Where(x => x.DNI_USUARIO.Equals(id)).Count();
-        }
-
         public void DeleteComentario(int id)
         {
             string sql = "SP_DELETECOMENTARIO @ID_COMENTARIO";
@@ -205,20 +200,41 @@ namespace ApiBibliotecas.Repositorys
 
 
 
-
-        public List<Autor> GetAutores()
+        //AUTORES
+        public async Task<List<Autor>> GetAutores()
         {
-            return this.context.Autores.ToList();
+            return await this.context.Autores.ToListAsync();
         }
 
-        public List<Autor> SearchAutor(string input)
+        public async Task<List<Autor>> SearchAutorNombre(string input)
         {
             string sql = "SP_BUSCARAUTOR @INPUT";
             SqlParameter p = new SqlParameter("@INPUT", input);
             var consulta = this.context.Autores.FromSqlRaw(sql, p);
-            return consulta.AsEnumerable().ToList();
+            return await consulta.ToListAsync();
         }
 
+        public async Task<Autor> GetDatosAutor(int id)
+        {
+            return await this.context.Autores.Where(x => x.ID_AUTOR == id).FirstOrDefaultAsync();
+        }
+
+
+
+        //USUARIO
+        public async Task<int> NumComentariosUsuario(string id)
+        {
+            return await this.context.ComentariosBasico.Where(x => x.DNI_USUARIO.Equals(id)).CountAsync();
+        }
+
+        public async Task<int> NumReseñasUsuario(string id)
+        {
+            return await this.context.Valoraciones.Where(x => x.DNI_USUARIO.Equals(id)).CountAsync();
+        }
+
+
+
+        //NO
 
         public int LibroDeseo(int idLibro, string dni)
         {
@@ -247,9 +263,6 @@ namespace ApiBibliotecas.Repositorys
             int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2, p3, p4);
         }
 
-
-
-
         public int NLibrosLeidos(string id)
         {
             return this.context.ListaDeseos.Where(x => x.DNI_USUARIO.Equals(id) && x.LEIDO == 1).Count();
@@ -268,8 +281,6 @@ namespace ApiBibliotecas.Repositorys
             return this.context.ComentariosBasico.Where(x => x.DNI_USUARIO.Equals(id)).ToList();
         }
 
-
-
         public List<LibroDeseo> GetFavoritos(string id)
         {
             string sql = "SP_LIBROSLISTA @DNI_USUARIO";
@@ -277,6 +288,7 @@ namespace ApiBibliotecas.Repositorys
             var consulta = this.context.LibrosDeseo.FromSqlRaw(sql, p1);
             return consulta.AsEnumerable().ToList();
         }
+
 
         public string GenerateToken()
         {
@@ -302,25 +314,6 @@ namespace ApiBibliotecas.Repositorys
             return this.context.Usuarios.Where(x => x.DNI_USUARIO.Equals(dni)).FirstOrDefault();
         }
 
-        public Autor GetDatosAutor(int id)
-        {
-            return this.context.Autores.Where(x => x.ID_AUTOR == id).FirstOrDefault();
-        }
-
-        public List<LibroDefault> GetLibrosAutor(int id)
-        {
-            return this.context.LibrosDef.Where(x => x.ID_AUTOR == id).ToList();
-        }
-
-        public List<LibroDefault> SearchLibroAutor(int id, string input)
-        {
-            string sql = "SP_SEARCHLIBRODEAUTOR @ID_AUTOR, @INPUT";
-            SqlParameter p1 = new SqlParameter("@ID_AUTOR", id);
-            SqlParameter p2 = new SqlParameter("@INPUT", input);
-            var consulta = this.context.LibrosDef.FromSqlRaw(sql, p1,p2);
-            return consulta.ToList();
-        }
-
         public void UpdateUsuario(string id, string nombre, string apellido, string email, int telefono, string usuario)
         {
             Usuario user = this.context.Usuarios.Where(x => x.DNI_USUARIO.Equals(id)).FirstOrDefault();
@@ -333,58 +326,72 @@ namespace ApiBibliotecas.Repositorys
         }
 
 
-        public List<BibliotecaSimple> GetLibroDisponible(int id)
+
+        //RESERVAS
+        public async Task<List<ReservaNLibro>> GetReservasBiblio(int id)
         {
-            string sql = "SP_LIBROBIBLIOTECADISPONIBLE @ID_LIBRO";
-            SqlParameter p1 = new SqlParameter("@ID_LIBRO", id);
-            List<BibliotecaSimple> consulta = this.context.BibliotecasSimples.FromSqlRaw(sql, p1).ToList();
+            string sql = "SP_GETPRESTAMOBIBLIOTECA @ID_BIBLIOTECA";
+            SqlParameter p1 = new SqlParameter("@ID_BIBLIOTECA", id);
+            List<ReservaNLibro> consulta = await this.context.ReservaNLibros.FromSqlRaw(sql, p1).ToListAsync();
             return consulta;
         }
 
-        public List<Reserva> GetResrevasLibro(int id , int idBiblio)
+        public async Task<List<Reserva>> GetResrevasLibro(int id , int idBiblio)
         {
-            return this.context.Reservas.Where(x => x.ID_LIBRO == id && x.ID_BIBLIOTECA == idBiblio).ToList();
+            return await this.context.Reservas.Where(x => x.ID_LIBRO == id && x.ID_BIBLIOTECA == idBiblio).ToListAsync();
         }
 
-        public List<string> GetDaysBetween(DateTime fecha_inicio, DateTime fecha_fin)
+        public async Task<List<BibliotecaSimple>> GetLibroDisponible(int id)
         {
-            var days = new List<string>();
-            for (DateTime date = fecha_inicio; date <= fecha_fin; date = date.AddDays(1))
-            {
-                days.Add(date.ToString("dd/MM/yyyy"));
-            }
-            return days;
+            string sql = "SP_LIBROBIBLIOTECADISPONIBLE @ID_LIBRO";
+            SqlParameter p1 = new SqlParameter("@ID_LIBRO", id);
+            List<BibliotecaSimple> consulta = await this.context.BibliotecasSimples.FromSqlRaw(sql, p1).ToListAsync();
+            return consulta;
         }
-
-        public void CreateReserva(string dni, int idLibro, int idBiblio, DateTime fechaI, DateTime fechaF)
+        
+        public async Task CreateReserva(Reserva reserva)
         {
             int nuevoId = this.context.Reservas.Any() ? this.context.Reservas.Max(x => x.ID_PRESTAMO) + 1 : 1;
-            Reserva r = new Reserva();
-            r.ID_PRESTAMO = nuevoId;
-            r.DNI_USUARIO = dni;
-            r.ID_LIBRO = idLibro;
-            r.ID_BIBLIOTECA = idBiblio;
-            r.FECHA_INICIO = fechaI;
-            r.FECHA_FIN = fechaF;
-            r.DEVUELTO = true;
-            r.COMPLETADO = false;
-            this.context.Reservas.Add(r);
-            this.context.SaveChangesAsync();
+            reserva.ID_PRESTAMO = nuevoId;
+            reserva.DEVUELTO = true;
+            reserva.COMPLETADO = false;
+            this.context.Reservas.Add(reserva);
+            await this.context.SaveChangesAsync();
         }
 
-        public void DeleteReserva(int id)
+        public async Task DeleteReserva(int id)
         {
             Reserva r = this.context.Reservas.Where(x => x.ID_PRESTAMO == id).FirstOrDefault();
             this.context.Reservas.Remove(r);
-            this.context.SaveChangesAsync();
+            await this.context.SaveChangesAsync();
         }
 
-        public void DeleteBiblioteca(int id)
+        public async Task RecogerLibro(int idPrestamo, int idBiblio)
         {
-            Biblioteca b = this.context.Bibliotecas.Where(x => x.ID_BIBLIOTECA == id).FirstOrDefault();
-            this.context.Bibliotecas.Remove(b);
-            this.context.SaveChangesAsync();
+            string sql = "SP_PRESTARLIBRO @ID_PRESTAMO ,@ID_BIBLIOTECA, @ID_LIBRO";
+            SqlParameter p1 = new SqlParameter("@ID_PRESTAMO", idPrestamo);
+            SqlParameter p2 = new SqlParameter("@ID_BIBLIOTECA", idBiblio);
+            Reserva r = await this.context.Reservas.Where(x => x.ID_PRESTAMO == idPrestamo).FirstOrDefaultAsync();
+            int idLibro = r.ID_LIBRO;
+            SqlParameter p3 = new SqlParameter("@ID_LIBRO", idLibro);
+            int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2, p3);
         }
+
+        public async Task DevolverLibro(int idPrestamo, int idBiblio)
+        {
+            string sql = "SP_RECIVIRLIBRO @ID_PRESTAMO ,@ID_BIBLIOTECA, @ID_LIBRO";
+            SqlParameter p1 = new SqlParameter("@ID_PRESTAMO", idPrestamo);
+            SqlParameter p2 = new SqlParameter("@ID_BIBLIOTECA", idBiblio);
+            Reserva r = await this.context.Reservas.Where(x => x.ID_PRESTAMO == idPrestamo).FirstOrDefaultAsync();
+            int idLibro = r.ID_LIBRO;
+            SqlParameter p3 = new SqlParameter("@ID_LIBRO", idLibro);
+            int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2, p3);
+        }
+
+
+        //ADMINISTRACION
+
+        //NO
 
         public void AddBiblio(string nombre, string direccion, int telefono, string web, TimeSpan hora_apertura, TimeSpan hora_cierre, string imagen)
         {
@@ -415,16 +422,13 @@ namespace ApiBibliotecas.Repositorys
             await this.context.SaveChangesAsync();
         }
 
-
-
-
-
-        public void DeleteLibro(int id)
+        public void DeleteBiblioteca(int id)
         {
-            LibroDefault l = this.context.LibrosDef.Where(x => x.ID_LIBRO == id).FirstOrDefault();
-            this.context.LibrosDef.Remove(l);
+            Biblioteca b = this.context.Bibliotecas.Where(x => x.ID_BIBLIOTECA == id).FirstOrDefault();
+            this.context.Bibliotecas.Remove(b);
             this.context.SaveChangesAsync();
         }
+
         public void AddLibro(string nombre, int numpag, string imagen, string urlcompra, string descripcion, string idioma, DateTime fecha_publicacion, int idautor)
         {
             int nuevoId = this.context.LibrosDef.Any() ? this.context.LibrosDef.Max(x => x.ID_LIBRO) + 1 : 1;
@@ -442,6 +446,7 @@ namespace ApiBibliotecas.Repositorys
             this.context.LibrosDef.Add(b);
             this.context.SaveChangesAsync();
         }
+
         public async Task UpdateLibro(int id, string nombre, int numpag, string imagen, string urlcompra, string descripcion, string idioma, DateTime fecha_publicacion, int idautor)
         {
             LibroDefault b = await GetDatosLibroDefAsync(id);
@@ -457,14 +462,13 @@ namespace ApiBibliotecas.Repositorys
             this.context.SaveChangesAsync();
         }
 
-
-
-        public void DeleteAutor(int id)
+        public void DeleteLibro(int id)
         {
-            Autor l = this.context.Autores.Where(x => x.ID_AUTOR == id).FirstOrDefault();
-            this.context.Autores.Remove(l);
+            LibroDefault l = this.context.LibrosDef.Where(x => x.ID_LIBRO == id).FirstOrDefault();
+            this.context.LibrosDef.Remove(l);
             this.context.SaveChangesAsync();
         }
+
         public void AddAutor(string nombre, string nacionalidad, DateTime fechaNac, string imagen, string descripcion, int numLibros, string wiki)
         {
             int nuevoId = this.context.Autores.Any() ? this.context.Autores.Max(x => x.ID_AUTOR) + 1 : 1;
@@ -480,9 +484,10 @@ namespace ApiBibliotecas.Repositorys
             this.context.Autores.Add(b);
             this.context.SaveChangesAsync();
         }
-        public void UpdateAutor(int id, string nombre, string nacionalidad, DateTime fechaNac, string imagen, string descripcion, int numLibros, string wiki)
+
+        public async Task UpdateAutor(int id, string nombre, string nacionalidad, DateTime fechaNac, string imagen, string descripcion, int numLibros, string wiki)
         {
-            Autor b = GetDatosAutor(id);
+            Autor b = await GetDatosAutor(id);
             b.NOMBRE = nombre;
             b.NACIONALIDAD = nacionalidad;
             b.FECHA_NACIMIENTO = fechaNac;
@@ -490,6 +495,13 @@ namespace ApiBibliotecas.Repositorys
             b.HISTORIA = descripcion;
             b.NUM_LIBROS = numLibros;
             b.WIKI = wiki;
+            this.context.SaveChangesAsync();
+        }
+
+        public void DeleteAutor(int id)
+        {
+            Autor l = this.context.Autores.Where(x => x.ID_AUTOR == id).FirstOrDefault();
+            this.context.Autores.Remove(l);
             this.context.SaveChangesAsync();
         }
 
@@ -524,18 +536,6 @@ namespace ApiBibliotecas.Repositorys
             return bibliotecasSimples;
         }
 
-        public List<LibroDefault> GetLibrosNotInBiblioteca(int id)
-        {
-            var consulta = from libro in this.context.LibrosDef
-                           where !(from lb in this.context.LibrosBiblio
-                                   where lb.ID_BIBLIOTECA == id
-                                   select lb.ID_LIBRO)
-                                   .Contains(libro.ID_LIBRO)
-                           select libro;
-
-            return consulta.ToList();
-        }
-
         public void AddLibroBiblio(int idBiblio, int idLibro)
         {
             string sql = "SP_ADDLIBROBIBLIOTECA @ID_LIBRO ,@ID_BIBLIOTECA";
@@ -552,34 +552,30 @@ namespace ApiBibliotecas.Repositorys
             int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2);
         }
 
-        public List<ReservaNLibro> GetReservasBiblio(int id)
+        public List<LibroDefault> GetLibrosNotInBiblioteca(int id)
         {
-            string sql = "SP_GETPRESTAMOBIBLIOTECA @ID_BIBLIOTECA";
-            SqlParameter p1 = new SqlParameter("@ID_BIBLIOTECA", id);
-            List<ReservaNLibro> consulta = this.context.ReservaNLibros.FromSqlRaw(sql, p1).ToList();
-            return consulta;
+            var consulta = from libro in this.context.LibrosDef
+                           where !(from lb in this.context.LibrosBiblio
+                                   where lb.ID_BIBLIOTECA == id
+                                   select lb.ID_LIBRO)
+                                   .Contains(libro.ID_LIBRO)
+                           select libro;
+
+            return consulta.ToList();
         }
 
-        public void RecogerLibro(int idPrestamo,int idBiblio)
-        {
-            string sql = "SP_PRESTARLIBRO @ID_PRESTAMO ,@ID_BIBLIOTECA, @ID_LIBRO";
-            SqlParameter p1 = new SqlParameter("@ID_PRESTAMO", idPrestamo);
-            SqlParameter p2 = new SqlParameter("@ID_BIBLIOTECA", idBiblio);
-            Reserva r = this.context.Reservas.Where(x => x.ID_PRESTAMO == idPrestamo).FirstOrDefault();
-            int idLibro = r.ID_LIBRO;
-            SqlParameter p3 = new SqlParameter("@ID_LIBRO", idLibro);
-            int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2,p3);
-        }
 
-        public void DevolverLibro(int idPrestamo, int idBiblio)
+
+        //OTORS
+    
+        public List<string> GetDaysBetween(DateTime fecha_inicio, DateTime fecha_fin)
         {
-            string sql = "SP_RECIVIRLIBRO @ID_PRESTAMO ,@ID_BIBLIOTECA, @ID_LIBRO";
-            SqlParameter p1 = new SqlParameter("@ID_PRESTAMO", idPrestamo);
-            SqlParameter p2 = new SqlParameter("@ID_BIBLIOTECA", idBiblio);
-            Reserva r = this.context.Reservas.Where(x => x.ID_PRESTAMO == idPrestamo).FirstOrDefault();
-            int idLibro = r.ID_LIBRO;
-            SqlParameter p3 = new SqlParameter("@ID_LIBRO", idLibro);
-            int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2, p3);
+            var days = new List<string>();
+            for (DateTime date = fecha_inicio; date <= fecha_fin; date = date.AddDays(1))
+            {
+                days.Add(date.ToString("dd/MM/yyyy"));
+            }
+            return days;
         }
     }
 }

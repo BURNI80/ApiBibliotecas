@@ -43,6 +43,22 @@ namespace ApiBibliotecas.Controllers
         }
 
 
+        [HttpPost]
+        [Route("[action]/{idLibro}/{dniusuario}/{fecha}/{textocomentario}/{puntuacion}")]
+        public async Task PostComentario(int idLibro, string dni, DateTime fecha, string textoComentario, int puntuacion)
+        {
+            this.repo.PostComentario(idLibro,dni,fecha,textoComentario, puntuacion);
+        }
+
+
+        [HttpDelete]
+        [Route("[action]/{idcomentario}")]
+        public async Task DeleteComentario(int idcomentario)
+        {
+            this.repo.DeleteComentario(idcomentario);
+
+        }
+
 
     }
 }
