@@ -20,13 +20,15 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpGet]
+        [Route("[action]")]
         public async Task<ActionResult<List<Biblioteca>>> GetBibliotecas()
         {
             return await this.repo.GetBibliotecasAsync();
         }
 
 
-        [HttpGet("{id}")]
+        [HttpGet]
+        [Route("[action]/{id}")]
         public async Task<ActionResult<Biblioteca>> FindBiblioteca(int id)
         {
             return await this.repo.FindBibliotecaAsync(id);
@@ -40,6 +42,44 @@ namespace ApiBibliotecas.Controllers
             return await this.repo.SearchBibliotecaAsync(input);
         }
 
+
+        [HttpPost]
+        [Route("[action]")]
+        public async Task AddBiblio(Biblioteca biblio)
+        {
+            await this.repo.AddBiblio(biblio);
+        }
+
+
+        [HttpPut]
+        [Route("[action]")]
+        public async Task UpdateBiblio(Biblioteca biblio)
+        {
+            await this.repo.UpdateBiblio(biblio);
+        }
+
+
+        [HttpDelete]
+        [Route("[action]/{id}")]
+        public async Task DeleteBiblioteca(int id)
+        {
+            await this.repo.DeleteBiblioteca(id);
+        }
+
+
+        [HttpGet]
+        [Route("[action]/{dniUsuario}")]
+        public async Task<ActionResult<List<BibliotecaSimple>>> GetBibliotecasEditables(string dniUsuario)
+        {
+            return this.repo.GetBibliotecasEditables(dniUsuario);
+        }
+
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<ActionResult<List<BibliotecaSimple>>> GetBibliotecasSimples()
+        {
+            return await this.repo.GetBibliotecasSimples();
+        }
 
 
 

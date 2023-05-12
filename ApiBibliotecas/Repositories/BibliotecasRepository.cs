@@ -20,25 +20,9 @@ namespace ApiBibliotecas.Repositorys
         }
 
 
-        public async Task Register(string nombre, string apellidos, string dni, string usuario, string password, string email, int telefono)
-        {
-            Usuario user = new Usuario();
-            user.NOMBRE = nombre;
-            user.APELLIDO = apellidos;
-            user.DNI_USUARIO = dni;
-            user.USUARIO = usuario;
-            user.CONTRASEÑA = password;
-            user.EMAIL = email;
-            user.TELEFONO = telefono;
-            user.ROL = "USUARIO";
-            user.SALT = HelperCryptography.GenerateSalt();
-            user.PASSWORD = HelperCryptography.EncryptPassword(password, user.SALT);
-
-            this.context.Usuarios.Add(user);
-            await this.context.SaveChangesAsync();
-        }
-
-        public Usuario Login(string dni, string pass)
+       
+        //AUTH
+        public async Task<Usuario> Login(string dni, string pass)
         {
             Usuario usu = this.context.Usuarios.FirstOrDefault(z => z.DNI_USUARIO == dni);
             if (usu == null)
@@ -63,7 +47,6 @@ namespace ApiBibliotecas.Repositorys
 
 
 
-
         //BIBLIOTECAS
         public async Task<List<Biblioteca>> GetBibliotecasAsync()
         {
@@ -84,6 +67,64 @@ namespace ApiBibliotecas.Repositorys
                            where data.ID_BIBLIOTECA == id
                            select data;
             return await consulta.FirstOrDefaultAsync();
+        }
+
+        public async Task AddBiblio(Biblioteca biblio)
+        {
+            biblio.ID_BIBLIOTECA = this.context.Bibliotecas.Any() ? this.context.Bibliotecas.Max(x => x.ID_BIBLIOTECA) + 1 : 1;
+            this.context.Bibliotecas.Add(biblio);
+            await this.context.SaveChangesAsync();
+        }
+
+        public async Task UpdateBiblio(Biblioteca biblio)
+        {
+            Biblioteca b = await FindBibliotecaAsync(biblio.ID_BIBLIOTECA);
+            b.NOMBRE = biblio.NOMBRE;
+            b.DIRECCION = biblio.DIRECCION;
+            b.TELEFONO = biblio.TELEFONO;
+            b.WEB = biblio.WEB;
+            b.IMAGEN = biblio.IMAGEN;
+            b.HORA_APERTURA = biblio.HORA_APERTURA;
+            b.HORA_CIERRE = biblio.HORA_CIERRE;
+            await this.context.SaveChangesAsync();
+        }
+
+        public async Task DeleteBiblioteca(int id)
+        {
+            Biblioteca b = this.context.Bibliotecas.Where(x => x.ID_BIBLIOTECA == id).FirstOrDefault();
+            this.context.Bibliotecas.Remove(b);
+            await this.context.SaveChangesAsync();
+        }
+
+        public List<BibliotecaSimple> GetBibliotecasEditables(string id)
+        {
+            var consulta = from editorBiblioteca in context.EditorBiblioteca
+                           join biblioteca in context.Bibliotecas
+                           on editorBiblioteca.ID_BIBLIOTECA equals biblioteca.ID_BIBLIOTECA
+                           where editorBiblioteca.DNI_USUARIO == id
+                           select new
+                           {
+                               biblioteca.ID_BIBLIOTECA,
+                               biblioteca.NOMBRE,
+                           };
+            List<BibliotecaSimple> biblios = consulta.ToList().ConvertAll(x => new BibliotecaSimple
+            {
+                ID_BIBLIOTECA = x.ID_BIBLIOTECA,
+                NOMBRE = x.NOMBRE,
+            });
+            return biblios;
+        }
+
+        public async Task<List<BibliotecaSimple>> GetBibliotecasSimples()
+        {
+            List<Biblioteca> biblios = await this.context.Bibliotecas.ToListAsync();
+            List<BibliotecaSimple> bibliotecasSimples = biblios.Select(b =>
+                    new BibliotecaSimple
+                    {
+                        ID_BIBLIOTECA = b.ID_BIBLIOTECA,
+                        NOMBRE = b.NOMBRE
+                    }).ToList();
+            return bibliotecasSimples;
         }
 
 
@@ -149,6 +190,63 @@ namespace ApiBibliotecas.Repositorys
             var consulta = this.context.LibrosDef.FromSqlRaw(sql, p1, p2);
             return await consulta.ToListAsync();
         }
+
+        public async Task<List<LibroDefault>> GetLibrosNotInBiblioteca(int id)
+        {
+            var consulta = from libro in this.context.LibrosDef
+                           where !(from lb in this.context.LibrosBiblio
+                                   where lb.ID_BIBLIOTECA == id
+                                   select lb.ID_LIBRO)
+                                   .Contains(libro.ID_LIBRO)
+                           select libro;
+
+            return await consulta.ToListAsync();
+        }
+
+        public async Task AddLibro(LibroDefault libro)
+        {
+            libro.ID_LIBRO = this.context.LibrosDef.Any() ? this.context.LibrosDef.Max(x => x.ID_LIBRO) + 1 : 1;
+            this.context.LibrosDef.Add(libro);
+            await this.context.SaveChangesAsync();
+        }
+
+        public async Task UpdateLibro(LibroDefault libro)
+        {
+            LibroDefault b = await GetDatosLibroDefAsync(libro.ID_LIBRO);
+            b.NOMBRE = libro.NOMBRE;
+            b.NUM_PAGINAS = libro.NUM_PAGINAS;
+            b.IMAGEN = libro.IMAGEN;
+            b.URL_COMPRA = libro.URL_COMPRA;
+            b.DESCRIPCION = libro.DESCRIPCION;
+            b.IDIOMA = libro.IDIOMA;
+            b.FECHA_PUBLICACION = libro.FECHA_PUBLICACION;
+            b.ID_AUTOR = libro.ID_AUTOR;
+            await this.context.SaveChangesAsync();
+        }
+
+        public async Task DeleteLibro(int id)
+        {
+            LibroDefault l = this.context.LibrosDef.Where(x => x.ID_LIBRO == id).FirstOrDefault();
+            this.context.LibrosDef.Remove(l);
+            await this.context.SaveChangesAsync();
+        }
+
+        public async Task AddLibroBiblio(int idBiblio, int idLibro)
+        {
+            string sql = "SP_ADDLIBROBIBLIOTECA @ID_LIBRO ,@ID_BIBLIOTECA";
+            SqlParameter p1 = new SqlParameter("@ID_LIBRO", idLibro);
+            SqlParameter p2 = new SqlParameter("@ID_BIBLIOTECA", idBiblio);
+            int rowsAffected = await this.context.Database.ExecuteSqlRawAsync(sql, p1, p2);
+        }
+
+        public async Task DeleteLibroBiblio(int idBiblio, int idLibro)
+        {
+            string sql = "SP_DELETELIBROBIBLIOTECA @ID_LIBRO ,@ID_BIBLIOTECA";
+            SqlParameter p1 = new SqlParameter("@ID_LIBRO", idLibro);
+            SqlParameter p2 = new SqlParameter("@ID_BIBLIOTECA", idBiblio);
+            int rowsAffected = await this.context.Database.ExecuteSqlRawAsync(sql, p1, p2);
+        }
+
 
 
 
@@ -219,9 +317,52 @@ namespace ApiBibliotecas.Repositorys
             return await this.context.Autores.Where(x => x.ID_AUTOR == id).FirstOrDefaultAsync();
         }
 
+        public async Task AddAutor(Autor autor)
+        {
+            autor.ID_AUTOR = this.context.Autores.Any() ? this.context.Autores.Max(x => x.ID_AUTOR) + 1 : 1;
+            this.context.Autores.Add(autor);
+            await this.context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAutor(Autor autor)
+        {
+            Autor b = await GetDatosAutor(autor.ID_AUTOR);
+            b.NOMBRE = autor.NOMBRE;
+            b.NACIONALIDAD = autor.NACIONALIDAD;
+            b.FECHA_NACIMIENTO = autor.FECHA_NACIMIENTO;
+            b.IMAGEN = autor.IMAGEN;
+            b.HISTORIA = autor.HISTORIA;
+            b.NUM_LIBROS = autor.NUM_LIBROS;
+            b.WIKI = autor.WIKI;
+            await this.context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAutor(int id)
+        {
+            Autor l = this.context.Autores.Where(x => x.ID_AUTOR == id).FirstOrDefault();
+            this.context.Autores.Remove(l);
+            await this.context.SaveChangesAsync();
+        }
 
 
         //USUARIO
+
+        public async Task<Usuario> GetUsuario(string dni)
+        {
+            return await this.context.Usuarios.Where(x => x.DNI_USUARIO.Equals(dni)).FirstOrDefaultAsync();
+        }
+
+        public async Task UpdateUsuario(Usuario usu)
+        {
+            Usuario user = this.context.Usuarios.Where(x => x.DNI_USUARIO.Equals(usu.DNI_USUARIO)).FirstOrDefault();
+            user.NOMBRE = usu.NOMBRE;
+            user.APELLIDO = usu.APELLIDO;
+            user.EMAIL = usu.EMAIL;
+            user.TELEFONO = usu.TELEFONO;
+            user.USUARIO = usu.USUARIO;
+            await this.context.SaveChangesAsync();
+        }
+
         public async Task<int> NumComentariosUsuario(string id)
         {
             return await this.context.ComentariosBasico.Where(x => x.DNI_USUARIO.Equals(id)).CountAsync();
@@ -232,9 +373,55 @@ namespace ApiBibliotecas.Repositorys
             return await this.context.Valoraciones.Where(x => x.DNI_USUARIO.Equals(id)).CountAsync();
         }
 
+        public async Task AddListaLibro(string dni, int idLibro, int orden)
+        {
+            DateTime fecha = DateTime.Now;
+            string sql = "SP_LISTADESEOS @ORDEN , @DNI_USUARIO, @ID_LIBRO, @FECHA";
+            SqlParameter p1 = new SqlParameter("@ORDEN", orden);
+            SqlParameter p2 = new SqlParameter("@DNI_USUARIO", dni);
+            SqlParameter p3 = new SqlParameter("@ID_LIBRO", idLibro);
+            SqlParameter p4 = new SqlParameter("@FECHA", fecha);
+            int rowsAffected = await this.context.Database.ExecuteSqlRawAsync(sql, p1, p2, p3, p4);
+        }
 
+        public async Task<int> NLibrosLeidos(string id)
+        {
+            return await this.context.ListaDeseos.Where(x => x.DNI_USUARIO.Equals(id) && x.LEIDO == 1).CountAsync();
+        }
 
-        //NO
+        public async Task<List<ReservaUsuario>> GetReservasUsuario(string id)
+        {
+            string sql = "SP_PRESTAMOSUSUARIO @DNI_USUARIO";
+            SqlParameter p1 = new SqlParameter("@DNI_USUARIO", id);
+            var consulta = this.context.ReservasUsuario.FromSqlRaw(sql, p1);
+            return await consulta.ToListAsync();
+        }
+
+        public async Task<List<ComentarioBasico>> GetComentariosUsuario(string id)
+        {
+            return await this.context.ComentariosBasico.Where(x => x.DNI_USUARIO.Equals(id)).ToListAsync();
+        }
+
+        public async Task<List<LibroDeseo>> GetFavoritos(string id)
+        {
+            string sql = "SP_LIBROSLISTA @DNI_USUARIO";
+            SqlParameter p1 = new SqlParameter("@DNI_USUARIO", id);
+            var consulta = this.context.LibrosDeseo.FromSqlRaw(sql, p1);
+            return await consulta.ToListAsync();
+        }
+
+        public async Task<Compartido> SetGetToken(string dni, string token)
+        {
+            string sql = "SP_COMPARTIR @DNI_USUARIO , @TOKEN";
+            SqlParameter p1 = new SqlParameter("@DNI_USUARIO", dni);
+            SqlParameter p2 = new SqlParameter("@TOKEN", token);
+            return await this.context.Share.FromSqlRaw(sql, p1, p2).FirstOrDefaultAsync();
+        }
+
+        public async Task<Compartido> GetShare(string id)
+        {
+            return await this.context.Share.Where(x => x.DNI_USUARIO.Equals(id)).FirstOrDefaultAsync();
+        }
 
         public int LibroDeseo(int idLibro, string dni)
         {
@@ -252,79 +439,15 @@ namespace ApiBibliotecas.Repositorys
             }
         }
 
-        public void AddListaLibro(string dni, int idLibro, int orden)
+        public async Task Register(Usuario user)
         {
-            DateTime fecha = DateTime.Now;
-            string sql = "SP_LISTADESEOS @ORDEN , @DNI_USUARIO, @ID_LIBRO, @FECHA";
-            SqlParameter p1 = new SqlParameter("@ORDEN", orden);
-            SqlParameter p2 = new SqlParameter("@DNI_USUARIO", dni);
-            SqlParameter p3 = new SqlParameter("@ID_LIBRO", idLibro);
-            SqlParameter p4 = new SqlParameter("@FECHA", fecha);
-            int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2, p3, p4);
+            user.ROL = "USUARIO";
+            user.SALT = HelperCryptography.GenerateSalt();
+            user.PASSWORD = HelperCryptography.EncryptPassword(user.CONTRASEÑA, user.SALT);
+
+            this.context.Usuarios.Add(user);
+            await this.context.SaveChangesAsync();
         }
-
-        public int NLibrosLeidos(string id)
-        {
-            return this.context.ListaDeseos.Where(x => x.DNI_USUARIO.Equals(id) && x.LEIDO == 1).Count();
-        }
-
-        public List<ReservaUsuario> GetReservasUsuario(string id)
-        {
-            string sql = "SP_PRESTAMOSUSUARIO @DNI_USUARIO";
-            SqlParameter p1 = new SqlParameter("@DNI_USUARIO", id);
-            var consulta = this.context.ReservasUsuario.FromSqlRaw(sql, p1);
-            return consulta.AsEnumerable().ToList();
-        }
-
-        public List<ComentarioBasico> GetComentariosUsuario(string id)
-        {
-            return this.context.ComentariosBasico.Where(x => x.DNI_USUARIO.Equals(id)).ToList();
-        }
-
-        public List<LibroDeseo> GetFavoritos(string id)
-        {
-            string sql = "SP_LIBROSLISTA @DNI_USUARIO";
-            SqlParameter p1 = new SqlParameter("@DNI_USUARIO", id);
-            var consulta = this.context.LibrosDeseo.FromSqlRaw(sql, p1);
-            return consulta.AsEnumerable().ToList();
-        }
-
-
-        public string GenerateToken()
-        {
-            var token = Guid.NewGuid().ToString("N") + new Random().Next(1000, 9999).ToString();
-            return token;
-        }
-
-        public Compartido GetToken(string dni, string token)
-        {
-            string sql = "SP_COMPARTIR @DNI_USUARIO , @TOKEN";
-            SqlParameter p1 = new SqlParameter("@DNI_USUARIO", dni);
-            SqlParameter p2 = new SqlParameter("@TOKEN", token);
-            return this.context.Share.FromSqlRaw(sql, p1, p2).AsEnumerable().FirstOrDefault();
-        }
-
-        public Compartido GetShare(string id)
-        {
-            return this.context.Share.Where(x => x.DNI_USUARIO.Equals(id)).FirstOrDefault();
-        }
-
-        public Usuario GetUsuario(string dni)
-        {
-            return this.context.Usuarios.Where(x => x.DNI_USUARIO.Equals(dni)).FirstOrDefault();
-        }
-
-        public void UpdateUsuario(string id, string nombre, string apellido, string email, int telefono, string usuario)
-        {
-            Usuario user = this.context.Usuarios.Where(x => x.DNI_USUARIO.Equals(id)).FirstOrDefault();
-            user.NOMBRE = nombre;
-            user.APELLIDO = apellido;
-            user.EMAIL = email;
-            user.TELEFONO = telefono;
-            user.USUARIO = usuario;
-            this.context.SaveChangesAsync();
-        }
-
 
 
         //RESERVAS
@@ -389,181 +512,6 @@ namespace ApiBibliotecas.Repositorys
         }
 
 
-        //ADMINISTRACION
-
-        //NO
-
-        public void AddBiblio(string nombre, string direccion, int telefono, string web, TimeSpan hora_apertura, TimeSpan hora_cierre, string imagen)
-        {
-            int nuevoId = this.context.Bibliotecas.Any() ? this.context.Bibliotecas.Max(x => x.ID_BIBLIOTECA) + 1 : 1;
-            Biblioteca b = new Biblioteca();
-            b.ID_BIBLIOTECA = nuevoId;
-            b.NOMBRE = nombre;
-            b.DIRECCION = direccion;
-            b.TELEFONO = telefono;
-            b.WEB = web;
-            b.IMAGEN = imagen;
-            b.HORA_APERTURA = hora_apertura;
-            b.HORA_CIERRE = hora_cierre;
-            this.context.Bibliotecas.Add(b);
-            this.context.SaveChangesAsync();
-        }
-
-        public async Task UpdateBiblio(int id, string nombre, string direccion, int telefono, string web, TimeSpan hora_apertura, TimeSpan hora_cierre, string imagen)
-        {
-            Biblioteca b = await FindBibliotecaAsync(id);
-            b.NOMBRE = nombre;
-            b.DIRECCION = direccion;
-            b.TELEFONO = telefono;
-            b.WEB = web;
-            b.IMAGEN = imagen;
-            b.HORA_APERTURA = hora_apertura;
-            b.HORA_CIERRE = hora_cierre;
-            await this.context.SaveChangesAsync();
-        }
-
-        public void DeleteBiblioteca(int id)
-        {
-            Biblioteca b = this.context.Bibliotecas.Where(x => x.ID_BIBLIOTECA == id).FirstOrDefault();
-            this.context.Bibliotecas.Remove(b);
-            this.context.SaveChangesAsync();
-        }
-
-        public void AddLibro(string nombre, int numpag, string imagen, string urlcompra, string descripcion, string idioma, DateTime fecha_publicacion, int idautor)
-        {
-            int nuevoId = this.context.LibrosDef.Any() ? this.context.LibrosDef.Max(x => x.ID_LIBRO) + 1 : 1;
-            LibroDefault b = new LibroDefault();
-            b.ID_LIBRO = nuevoId;
-            b.NOMBRE = nombre;
-            b.NUM_PAGINAS = numpag;
-            b.IMAGEN = null;
-            b.URL_COMPRA = urlcompra;
-            b.DESCRIPCION = descripcion;
-            b.IDIOMA = idioma;
-            b.IMAGEN = imagen;
-            b.FECHA_PUBLICACION = fecha_publicacion;
-            b.ID_AUTOR = idautor;
-            this.context.LibrosDef.Add(b);
-            this.context.SaveChangesAsync();
-        }
-
-        public async Task UpdateLibro(int id, string nombre, int numpag, string imagen, string urlcompra, string descripcion, string idioma, DateTime fecha_publicacion, int idautor)
-        {
-            LibroDefault b = await GetDatosLibroDefAsync(id);
-            b.NOMBRE = nombre;
-            b.NUM_PAGINAS = numpag;
-            b.IMAGEN = null;
-            b.URL_COMPRA = urlcompra;
-            b.DESCRIPCION = descripcion;
-            b.IMAGEN = imagen;
-            b.IDIOMA = idioma;
-            b.FECHA_PUBLICACION = fecha_publicacion;
-            b.ID_AUTOR = idautor;
-            this.context.SaveChangesAsync();
-        }
-
-        public void DeleteLibro(int id)
-        {
-            LibroDefault l = this.context.LibrosDef.Where(x => x.ID_LIBRO == id).FirstOrDefault();
-            this.context.LibrosDef.Remove(l);
-            this.context.SaveChangesAsync();
-        }
-
-        public void AddAutor(string nombre, string nacionalidad, DateTime fechaNac, string imagen, string descripcion, int numLibros, string wiki)
-        {
-            int nuevoId = this.context.Autores.Any() ? this.context.Autores.Max(x => x.ID_AUTOR) + 1 : 1;
-            Autor b = new Autor();
-            b.ID_AUTOR = nuevoId;
-            b.NOMBRE = nombre;
-            b.NACIONALIDAD = nacionalidad;
-            b.FECHA_NACIMIENTO = fechaNac;
-            b.IMAGEN = imagen;
-            b.HISTORIA = descripcion;
-            b.NUM_LIBROS = numLibros;
-            b.WIKI = wiki;
-            this.context.Autores.Add(b);
-            this.context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAutor(int id, string nombre, string nacionalidad, DateTime fechaNac, string imagen, string descripcion, int numLibros, string wiki)
-        {
-            Autor b = await GetDatosAutor(id);
-            b.NOMBRE = nombre;
-            b.NACIONALIDAD = nacionalidad;
-            b.FECHA_NACIMIENTO = fechaNac;
-            b.IMAGEN = imagen;
-            b.HISTORIA = descripcion;
-            b.NUM_LIBROS = numLibros;
-            b.WIKI = wiki;
-            this.context.SaveChangesAsync();
-        }
-
-        public void DeleteAutor(int id)
-        {
-            Autor l = this.context.Autores.Where(x => x.ID_AUTOR == id).FirstOrDefault();
-            this.context.Autores.Remove(l);
-            this.context.SaveChangesAsync();
-        }
-
-        public List<BibliotecaSimple> GetBibliotecasEditables(string id)
-        {
-            var consulta = from editorBiblioteca in context.EditorBiblioteca
-                           join biblioteca in context.Bibliotecas
-                           on editorBiblioteca.ID_BIBLIOTECA equals biblioteca.ID_BIBLIOTECA
-                           where editorBiblioteca.DNI_USUARIO == id
-                           select new
-                           {
-                               biblioteca.ID_BIBLIOTECA,
-                               biblioteca.NOMBRE,
-                           };
-            List<BibliotecaSimple> biblios = consulta.ToList().ConvertAll(x => new BibliotecaSimple
-            {
-                ID_BIBLIOTECA = x.ID_BIBLIOTECA,
-                NOMBRE = x.NOMBRE,
-            });
-            return biblios;
-        }
-
-        public List<BibliotecaSimple> GetBibliotecasSimples()
-        {
-            List<Biblioteca> biblios = this.context.Bibliotecas.ToList();
-            List<BibliotecaSimple> bibliotecasSimples = biblios.Select(b =>
-                    new BibliotecaSimple
-                    {
-                        ID_BIBLIOTECA = b.ID_BIBLIOTECA,
-                        NOMBRE = b.NOMBRE
-                    }).ToList();
-            return bibliotecasSimples;
-        }
-
-        public void AddLibroBiblio(int idBiblio, int idLibro)
-        {
-            string sql = "SP_ADDLIBROBIBLIOTECA @ID_LIBRO ,@ID_BIBLIOTECA";
-            SqlParameter p1 = new SqlParameter("@ID_LIBRO", idLibro);
-            SqlParameter p2 = new SqlParameter("@ID_BIBLIOTECA", idBiblio);
-            int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2);
-        }
-
-        public void DeleteLibroBiblio(int idBiblio, int idLibro)
-        {
-            string sql = "SP_DELETELIBROBIBLIOTECA @ID_LIBRO ,@ID_BIBLIOTECA";
-            SqlParameter p1 = new SqlParameter("@ID_LIBRO", idLibro);
-            SqlParameter p2 = new SqlParameter("@ID_BIBLIOTECA", idBiblio);
-            int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2);
-        }
-
-        public List<LibroDefault> GetLibrosNotInBiblioteca(int id)
-        {
-            var consulta = from libro in this.context.LibrosDef
-                           where !(from lb in this.context.LibrosBiblio
-                                   where lb.ID_BIBLIOTECA == id
-                                   select lb.ID_LIBRO)
-                                   .Contains(libro.ID_LIBRO)
-                           select libro;
-
-            return consulta.ToList();
-        }
-
 
 
         //OTORS
@@ -576,6 +524,12 @@ namespace ApiBibliotecas.Repositorys
                 days.Add(date.ToString("dd/MM/yyyy"));
             }
             return days;
+        }
+
+        public string GenerateToken()
+        {
+            var token = Guid.NewGuid().ToString("N") + new Random().Next(1000, 9999).ToString();
+            return token;
         }
     }
 }

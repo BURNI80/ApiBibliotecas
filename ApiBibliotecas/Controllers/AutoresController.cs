@@ -40,6 +40,31 @@ namespace ApiBibliotecas.Controllers
         }
 
 
+        [HttpPost]
+        [Route("[action]")]
+        public async Task AddAutor(Autor autor)
+        {
+            await this.repo.AddAutor(autor);
+        }
+
+
+        [HttpPut]
+        [Route("[action]")]
+        public async Task UpdateAutor(Autor autor)
+        {
+            await this.repo.UpdateAutor(autor);
+        }
+
+
+        [HttpDelete]
+        [Route("[action]/{id}")]
+        public async Task DeleteAutor(int id)
+        {
+            await this.repo.DeleteAutor(id);
+        }
+
+
+
 
 
 

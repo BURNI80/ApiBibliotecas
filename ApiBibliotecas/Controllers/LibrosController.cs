@@ -72,6 +72,52 @@ namespace ApiBibliotecas.Controllers
             return await this.repo.SearchLibroAutorNombre(idautor,input);
         }
 
+        [HttpGet]
+        [Route("[action]/{id}")]
+        public async Task<ActionResult<List<LibroDefault>>> GetLibrosNotInBiblioteca(int id)
+        {
+            return await this.repo.GetLibrosNotInBiblioteca(id);
+        }
+
+
+        [HttpPost]
+        [Route("[action]")]
+        public async Task AddLibro(LibroDefault libro)
+        {
+            await this.repo.AddLibro(libro);
+        }
+
+
+        [HttpPut]
+        [Route("[action]")]
+        public async Task UpdateLibro(LibroDefault libro)
+        {
+            await this.repo.UpdateLibro(libro);
+        }
+
+
+        [HttpDelete]
+        [Route("[action]/{id}")]
+        public async Task DeleteLibro(int id)
+        {
+            await this.repo.DeleteLibro(id);
+        }
+
+
+        [HttpPost]
+        [Route("[action]/{idBiblio}/{idLibro}")]
+        public async Task AddLibroBiblio(int idBiblio, int idLibro)
+        {
+            await this.repo.AddLibroBiblio(idBiblio, idLibro);
+        }
+
+
+        [HttpDelete]
+        [Route("[action]/{idBiblio}/{idLibro}")]
+        public async Task DeleteLibroBiblio(int idBiblio, int idLibro)
+        {
+            await this.repo.DeleteLibroBiblio(idBiblio, idLibro);
+        }
 
 
 

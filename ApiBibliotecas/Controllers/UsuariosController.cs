@@ -1,6 +1,7 @@
 ﻿using ApiBibliotecas.Repositorys;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using NuguetProyectoBibliotecas.Models;
 
 namespace ApiBibliotecas.Controllers
 {
@@ -15,6 +16,21 @@ namespace ApiBibliotecas.Controllers
             this.repo = repo;
         }
 
+
+        [HttpGet]
+        [Route("[action]/{dniUsu}")]
+        public async Task<ActionResult<Usuario>> GetUsuario(string dniUsu)
+        {
+            return await this.repo.GetUsuario(dniUsu);
+        }
+
+
+        [HttpPut]
+        [Route("[action]")]
+        public async Task UpdateUsuario(Usuario usu)
+        {
+            await this.repo.UpdateUsuario(usu);
+        }
 
 
         [HttpGet]
@@ -35,7 +51,74 @@ namespace ApiBibliotecas.Controllers
         }
 
 
+        [HttpPost]
+        [Route("[action]/{dniUsu}/{idLibro}/{orden}")]
+        public async Task AddListaLibro(string dniUsu, int idLibro, int orden)
+        {
+            await this.repo.AddListaLibro(dniUsu, idLibro, orden);
+        }
 
+
+        [HttpPost]
+        [Route("[action]/{dniUsu}")]
+        public async Task<ActionResult<int>> NLibrosLeidos(string dniUsu)
+        {
+            return await this.repo.NLibrosLeidos(dniUsu);
+        }
+
+
+        [HttpGet]
+        [Route("[action]/{dniUsu}")]
+        public async Task<ActionResult<List<ReservaUsuario>>> GetReservasUsuario(string dniUsu)
+        {
+            return await this.repo.GetReservasUsuario(dniUsu);
+        }
+
+        [HttpGet]
+        [Route("[action]/{dniUsu}")]
+        public async Task<ActionResult<List<ComentarioBasico>>> GetComentariosUsuario(string dniUsu)
+        {
+            return await this.repo.GetComentariosUsuario(dniUsu);
+        }
+
+
+        [HttpGet]
+        [Route("[action]/{dniUsu}")]
+        public async Task<ActionResult<List<LibroDeseo>>> GetFavoritos(string dniUsu)
+        {
+            return await this.repo.GetFavoritos(dniUsu);
+        }
+
+        [HttpPost]
+        [Route("[action]/{dniUsu}/{token}")]
+        public async Task<ActionResult<Compartido>> SetGetToken(string dniUsu, string token)
+        {
+            return await this.repo.SetGetToken(dniUsu, token);
+        }
+
+
+        [HttpGet]
+        [Route("[action]/{dniUsu}")]
+        public async Task<ActionResult<Compartido>> GetShare(string dniUsu)
+        {
+            return await this.repo.GetShare(dniUsu);
+        }
+
+
+        [HttpGet]
+        [Route("[action]/{idLibro}/{dniUsu}")]
+        public async Task<ActionResult<int>> LibroDeseo(int idLibro, string dniUsu)
+        {
+            return this.repo.LibroDeseo(idLibro,dniUsu);
+        }
+
+
+        [HttpPost]
+        [Route("[action]")]
+        public async Task Register(Usuario user)
+        {
+            await this.repo.Register(user);
+        }
 
     }
 }
