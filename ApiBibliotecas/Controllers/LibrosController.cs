@@ -1,4 +1,5 @@
 ﻿using ApiBibliotecas.Repositorys;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NuguetProyectoBibliotecas.Models;
@@ -73,6 +74,7 @@ namespace ApiBibliotecas.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         [Route("[action]/{id}")]
         public async Task<ActionResult<List<LibroDefault>>> GetLibrosNotInBiblioteca(int id)
         {
@@ -81,6 +83,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpPost]
+        [Authorize]
         [Route("[action]")]
         public async Task AddLibro(LibroDefault libro)
         {
@@ -89,6 +92,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpPut]
+        [Authorize]
         [Route("[action]")]
         public async Task UpdateLibro(LibroDefault libro)
         {
@@ -97,6 +101,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpDelete]
+        [Authorize]
         [Route("[action]/{id}")]
         public async Task DeleteLibro(int id)
         {
@@ -105,6 +110,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpPost]
+        [Authorize]
         [Route("[action]/{idBiblio}/{idLibro}")]
         public async Task AddLibroBiblio(int idBiblio, int idLibro)
         {
@@ -113,6 +119,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpDelete]
+        [Authorize]
         [Route("[action]/{idBiblio}/{idLibro}")]
         public async Task DeleteLibroBiblio(int idBiblio, int idLibro)
         {

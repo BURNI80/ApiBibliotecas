@@ -1,4 +1,5 @@
 ﻿using ApiBibliotecas.Repositorys;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NuguetProyectoBibliotecas.Models;
@@ -26,6 +27,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpPut]
+        [Authorize]
         [Route("[action]")]
         public async Task UpdateUsuario(Usuario usu)
         {
@@ -34,6 +36,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpGet]
+        [Authorize]
         [Route("[action]/{dniusuario}")]
         public async Task<ActionResult<int>> NumComentariosUsuario(string dniusuario)
         {
@@ -43,6 +46,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpGet]
+        [Authorize]
         [Route("[action]/{dniusuario}")]
         public async Task<ActionResult<int>> NumReseñasUsuario(string dniusuario)
         {
@@ -52,6 +56,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpPost]
+        [Authorize]
         [Route("[action]/{dniUsu}/{idLibro}/{orden}")]
         public async Task AddListaLibro(string dniUsu, int idLibro, int orden)
         {
@@ -60,6 +65,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpPost]
+        [Authorize]
         [Route("[action]/{dniUsu}")]
         public async Task<ActionResult<int>> NLibrosLeidos(string dniUsu)
         {
@@ -68,6 +74,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpGet]
+        [Authorize]
         [Route("[action]/{dniUsu}")]
         public async Task<ActionResult<List<ReservaUsuario>>> GetReservasUsuario(string dniUsu)
         {
@@ -75,6 +82,7 @@ namespace ApiBibliotecas.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         [Route("[action]/{dniUsu}")]
         public async Task<ActionResult<List<ComentarioBasico>>> GetComentariosUsuario(string dniUsu)
         {
@@ -83,6 +91,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpGet]
+        [Authorize]
         [Route("[action]/{dniUsu}")]
         public async Task<ActionResult<List<LibroDeseo>>> GetFavoritos(string dniUsu)
         {
@@ -106,6 +115,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpGet]
+        [Authorize]
         [Route("[action]/{idLibro}/{dniUsu}")]
         public async Task<ActionResult<int>> LibroDeseo(int idLibro, string dniUsu)
         {

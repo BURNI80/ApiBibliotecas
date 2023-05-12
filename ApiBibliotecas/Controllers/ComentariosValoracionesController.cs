@@ -1,4 +1,5 @@
 ﻿using ApiBibliotecas.Repositorys;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NuguetProyectoBibliotecas.Models;
@@ -34,6 +35,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpGet]
+        [Authorize]
         [Route("[action]/{dniusuario}/{idcomentario}/{orden}")]
         public IActionResult LikeComentario(string dniusuario, int idcomentario, int orden)
         {
@@ -44,6 +46,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpPost]
+        [Authorize]
         [Route("[action]/{idLibro}/{dniusuario}/{fecha}/{textocomentario}/{puntuacion}")]
         public async Task PostComentario(int idLibro, string dni, DateTime fecha, string textoComentario, int puntuacion)
         {
@@ -52,6 +55,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpDelete]
+        [Authorize]
         [Route("[action]/{idcomentario}")]
         public async Task DeleteComentario(int idcomentario)
         {
