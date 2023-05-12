@@ -1,5 +1,4 @@
 ﻿using ApiBibliotecas.Repositorys;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NuguetProyectoBibliotecas.Models;
@@ -19,7 +18,6 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpGet]
-        [Authorize]
         [Route("[action]/{idbiblioteca}")]
         public async Task<ActionResult<List<ReservaNLibro>>> GetReservasBiblio(int idbiblioteca)
         {
@@ -28,7 +26,6 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpGet]
-        [Authorize]
         [Route("[action]/{idlibro}/{idbiblio}")]
         public async Task<ActionResult<List<Reserva>>> GetResrevasLibro(int idlibro, int idbiblio)
         {
@@ -45,7 +42,6 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpPost]
-        [Authorize]
         [Route("[action]/{reserva}")]
         public async Task CreateReserva(Reserva reserva)
         {
@@ -54,7 +50,6 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpDelete]
-        [Authorize]
         [Route("[action]/{idreserva}")]
         public async Task DeleteReserva(int idreserva)
         {
@@ -63,7 +58,6 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpGet]
-        [Authorize]
         [Route("[action]/{idprestamo}/{idbiblio}")]
         public async Task RecogerLibro(int idprestamo, int idbiblio)
         {
@@ -72,7 +66,6 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpGet]
-        [Authorize]
         [Route("[action]/{idprestamo}/{idbiblio}")]
         public async Task DevolverLibro(int idprestamo, int idbiblio)
         {

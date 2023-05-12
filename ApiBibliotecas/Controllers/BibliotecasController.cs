@@ -1,5 +1,4 @@
 ﻿using ApiBibliotecas.Repositorys;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NuguetProyectoBibliotecas.Models;
@@ -45,7 +44,6 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpPost]
-        [Authorize]
         [Route("[action]")]
         public async Task AddBiblio(Biblioteca biblio)
         {
@@ -54,7 +52,6 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpPut]
-        [Authorize]
         [Route("[action]")]
         public async Task UpdateBiblio(Biblioteca biblio)
         {
@@ -63,7 +60,6 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpDelete]
-        [Authorize]
         [Route("[action]/{id}")]
         public async Task DeleteBiblioteca(int id)
         {
