@@ -11,6 +11,7 @@ namespace ApiBibliotecas.Helpers
         public string Audience { get; set; }
         public string SecretKey { get; set; }
 
+
         public HelperOAuthToken(IConfiguration configuration)
         {
             this.Issuer = configuration.GetValue<string>("ApiOAuth:Issuer");
