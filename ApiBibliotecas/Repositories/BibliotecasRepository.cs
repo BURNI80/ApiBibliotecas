@@ -152,29 +152,40 @@ namespace ApiBibliotecas.Repositorys
         {
             string sql = "SP_BUSCARLIBRO @ID_BIBLIOTECA";
             SqlParameter p = new SqlParameter("@ID_BIBLIOTECA", id);
-            var consulta = this.context.LibroDisponibilidad.FromSqlRaw(sql, p);
+            var consulta = this.context.LibrosDisponibilidad.FromSqlRaw(sql, p);
             return await consulta.ToListAsync();
         }
 
         public async Task<List<LibroDisponibilidad>> SearchLibroBibliotecaAsync(int id, string input, char option)
         {
             string sql = "";
-            if (input == null)
+            if (input == null ||  input == "null")
             {
-                return await GetLibrosBibliotecaAsync(id);
+                sql = "SP_LIBROSDISPO";
+                var consulta = this.context.LibrosDisponibilidad.FromSqlRaw(sql);
+                return await consulta.ToListAsync();
+
             }
             if (option == 'T')
             {
                 sql = "SP_BUSCARLIBRONOMBRE @INPUT, @ID_BIBLIOTECA";
+                SqlParameter p1 = new SqlParameter("@INPUT", input);
+                SqlParameter p2 = new SqlParameter("@ID_BIBLIOTECA", id);
+                var consulta = this.context.LibrosDisponibilidad.FromSqlRaw(sql, p1, p2);
+                return await consulta.ToListAsync();
+
             }
             else if (option == 'A')
             {
                 sql = "SP_BUSCARLIBROAUTOR @INPUT, @ID_BIBLIOTECA";
+                SqlParameter p1 = new SqlParameter("@INPUT", input);
+                SqlParameter p2 = new SqlParameter("@ID_BIBLIOTECA", id);
+                var consulta = this.context.LibrosDisponibilidad.FromSqlRaw(sql, p1, p2);
+                return await consulta.ToListAsync();
+
             }
-            SqlParameter p1 = new SqlParameter("@INPUT", input);
-            SqlParameter p2 = new SqlParameter("@ID_BIBLIOTECA", id);
-            var consulta = this.context.LibroDisponibilidad.FromSqlRaw(sql, p1, p2);
-            return await consulta.ToListAsync();
+            return null;
+
         }
 
         public async Task<List<LibroDefault>> GetLibrosAutor(int id)
@@ -278,13 +289,13 @@ namespace ApiBibliotecas.Repositorys
             int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2, p3);
         }
 
-        public void PostComentario(int idLibro, string dni, DateTime fecha, string textoComentario, int rating)
+        public void PostComentario(Comentario com, int rating)
         {
             string sql = "SP_CREATECOMENTARIORESENIA @ID_LIBRO, @DNI_USUARIO, @FECHA_COMENTARIO, @MENSAJE, @PUNTUACION";
-            SqlParameter p1 = new SqlParameter("@ID_LIBRO", idLibro);
-            SqlParameter p2 = new SqlParameter("@DNI_USUARIO", dni);
-            SqlParameter p3 = new SqlParameter("@FECHA_COMENTARIO", fecha);
-            SqlParameter p4 = new SqlParameter("@MENSAJE", textoComentario ?? (object)DBNull.Value);
+            SqlParameter p1 = new SqlParameter("@ID_LIBRO", com.ID_LIBRO);
+            SqlParameter p2 = new SqlParameter("@DNI_USUARIO", com.USUARIO);
+            SqlParameter p3 = new SqlParameter("@FECHA_COMENTARIO", com.FECHA_COMENTARIO);
+            SqlParameter p4 = new SqlParameter("@MENSAJE", com.MENSAJE ?? (object)DBNull.Value);
             SqlParameter p5 = new SqlParameter("@PUNTUACION", rating);
             int rowsAffected = this.context.Database.ExecuteSqlRaw(sql, p1, p2, p3, p4, p5);
         }
@@ -412,10 +423,11 @@ namespace ApiBibliotecas.Repositorys
 
         public async Task<Compartido> SetGetToken(string dni, string token)
         {
+            //return await this.context.Share.Where(x => x.TOKEN == token && x.DNI_USUARIO == dni).FirstOrDefaultAsync();
             string sql = "SP_COMPARTIR @DNI_USUARIO , @TOKEN";
             SqlParameter p1 = new SqlParameter("@DNI_USUARIO", dni);
             SqlParameter p2 = new SqlParameter("@TOKEN", token);
-            return await this.context.Share.FromSqlRaw(sql, p1, p2).FirstOrDefaultAsync();
+            return this.context.Share.FromSqlRaw(sql, p1, p2).AsEnumerable().FirstOrDefault();
         }
 
         public async Task<Compartido> GetShare(string id)

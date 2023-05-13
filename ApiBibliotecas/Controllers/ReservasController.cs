@@ -46,7 +46,7 @@ namespace ApiBibliotecas.Controllers
 
         [HttpPost]
         [Authorize]
-        [Route("[action]/{reserva}")]
+        [Route("[action]")]
         public async Task CreateReserva(Reserva reserva)
         {
             await this.repo.CreateReserva(reserva);
@@ -62,7 +62,7 @@ namespace ApiBibliotecas.Controllers
         }
 
 
-        [HttpGet]
+        [HttpPost]
         [Authorize]
         [Route("[action]/{idprestamo}/{idbiblio}")]
         public async Task RecogerLibro(int idprestamo, int idbiblio)
@@ -71,7 +71,7 @@ namespace ApiBibliotecas.Controllers
         }
 
 
-        [HttpGet]
+        [HttpPost]
         [Authorize]
         [Route("[action]/{idprestamo}/{idbiblio}")]
         public async Task DevolverLibro(int idprestamo, int idbiblio)

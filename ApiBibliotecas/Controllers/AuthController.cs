@@ -55,6 +55,13 @@ namespace ApiBibliotecas.Controllers
                 });
             }
         }
+
+        [HttpPost]
+        [Route("[action]")]
+        public async Task<ActionResult<Usuario>> GetUsu(UsuarioLogin model)
+        {
+            return await this.repo.Login(model.DniUsuario, model.Contraseña);
+        }
     }
 
 }

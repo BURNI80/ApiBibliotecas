@@ -27,11 +27,11 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpPut]
-        [Authorize]
+        //[Authorize]
         [Route("[action]")]
-        public async Task UpdateUsuario(Usuario usu)
+        public async Task UpdateUsuario(Usuario usuario)
         {
-            await this.repo.UpdateUsuario(usu);
+            await this.repo.UpdateUsuario(usuario);
         }
 
 
@@ -64,7 +64,7 @@ namespace ApiBibliotecas.Controllers
         }
 
 
-        [HttpPost]
+        [HttpGet]
         [Authorize]
         [Route("[action]/{dniUsu}")]
         public async Task<ActionResult<int>> NLibrosLeidos(string dniUsu)
@@ -91,7 +91,7 @@ namespace ApiBibliotecas.Controllers
 
 
         [HttpGet]
-        [Authorize]
+        //[Authorize]
         [Route("[action]/{dniUsu}")]
         public async Task<ActionResult<List<LibroDeseo>>> GetFavoritos(string dniUsu)
         {
@@ -99,10 +99,10 @@ namespace ApiBibliotecas.Controllers
         }
 
         [HttpPost]
-        [Route("[action]/{dniUsu}/{token}")]
-        public async Task<ActionResult<Compartido>> SetGetToken(string dniUsu, string token)
+        [Route("[action]")]
+        public async Task<ActionResult<Compartido>> SetGetToken(Compartido compartido)
         {
-            return await this.repo.SetGetToken(dniUsu, token);
+            return await this.repo.SetGetToken(compartido.DNI_USUARIO, compartido.TOKEN);
         }
 
 
@@ -125,9 +125,9 @@ namespace ApiBibliotecas.Controllers
 
         [HttpPost]
         [Route("[action]")]
-        public async Task Register(Usuario user)
+        public async Task Register(Usuario usuario)
         {
-            await this.repo.Register(user);
+            await this.repo.Register(usuario);
         }
 
     }

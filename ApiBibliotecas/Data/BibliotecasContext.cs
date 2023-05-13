@@ -22,7 +22,7 @@ namespace ApiBibliotecas.Data
 
         public DbSet<Usuario> Usuarios { get; set; }
 
-        public DbSet<LibroDisponibilidad> LibroDisponibilidad { get; set; }
+        public DbSet<LibroDisponibilidad> LibrosDisponibilidad { get; set; }
 
         public DbSet<Valoracion> Valoraciones { get; set; }
 

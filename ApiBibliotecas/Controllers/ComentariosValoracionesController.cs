@@ -47,10 +47,10 @@ namespace ApiBibliotecas.Controllers
 
         [HttpPost]
         [Authorize]
-        [Route("[action]/{idLibro}/{dniusuario}/{fecha}/{textocomentario}/{puntuacion}")]
-        public async Task PostComentario(int idLibro, string dni, DateTime fecha, string textoComentario, int puntuacion)
+        [Route("[action]/{puntuacion}")]
+        public async Task PostComentario(Comentario comentario, int puntuacion)
         {
-            this.repo.PostComentario(idLibro,dni,fecha,textoComentario, puntuacion);
+            this.repo.PostComentario(comentario, puntuacion);
         }
 
 
