@@ -17,6 +17,15 @@ namespace ApiBibliotecas.Controllers
             this.repo = repo;
         }
 
+        [HttpGet]
+        [Route("[action]")]
+        public async Task<ActionResult<List<Usuario>>> GetUsuariosEmail()
+        {
+            return await this.repo.GetUsuariosEmail();
+        }
+
+
+
 
         [HttpGet]
         [Route("[action]/{dniUsu}")]
@@ -24,6 +33,7 @@ namespace ApiBibliotecas.Controllers
         {
             return await this.repo.GetUsuario(dniUsu);
         }
+
 
 
         [HttpPut]

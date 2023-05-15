@@ -490,6 +490,8 @@ namespace ApiBibliotecas.Repositorys
             reserva.ID_PRESTAMO = nuevoId;
             reserva.DEVUELTO = true;
             reserva.COMPLETADO = false;
+            reserva.FECHA_FIN = DateTime.Parse(reserva.FECHA_FIN.ToString("yyyy-MM-dd"));
+            reserva.FECHA_INICIO = DateTime.Parse(reserva.FECHA_INICIO.ToString("yyyy-MM-dd"));
             this.context.Reservas.Add(reserva);
             await this.context.SaveChangesAsync();
         }
@@ -526,8 +528,24 @@ namespace ApiBibliotecas.Repositorys
 
 
 
+        public async Task<List<Usuario>> GetUsuariosEmail()
+        {
+            DateTime fechaActual = DateTime.Now;
+            DateTime fechaLimite = fechaActual.AddDays(1);
+
+            var reservas = await this.context.Reservas.Where(x => x.FECHA_FIN < fechaLimite && fechaActual < x.FECHA_FIN).ToArrayAsync();
+            List<Usuario> usuarios = new List<Usuario>();
+            foreach(Reserva r in reservas)
+            {
+                usuarios.Add(await this.context.Usuarios.Where(x => x.DNI_USUARIO == r.DNI_USUARIO).FirstOrDefaultAsync());
+            }
+            return usuarios;
+        }
+
+
+
         //OTORS
-    
+
         public List<string> GetDaysBetween(DateTime fecha_inicio, DateTime fecha_fin)
         {
             var days = new List<string>();

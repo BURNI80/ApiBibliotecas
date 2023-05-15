@@ -14,7 +14,9 @@ builder.Services.AddAzureClients(factory =>
 });
 SecretClient secretClient = builder.Services.BuildServiceProvider().GetService<SecretClient>();
 KeyVaultSecret keyVaultSecret = await secretClient.GetSecretAsync("SqlAzure");
+
 string connectionString = keyVaultSecret.Value;
+//string connectionString = "Data Source=agcclase.database.windows.net;Initial Catalog=BIBLIOTECAS;User ID=adminsql;Password=Admin123";
 
 builder.Services.AddTransient<BibliotecasRepository>();
 builder.Services.AddDbContext<BibliotecasContext>(options => options.UseSqlServer(connectionString));
