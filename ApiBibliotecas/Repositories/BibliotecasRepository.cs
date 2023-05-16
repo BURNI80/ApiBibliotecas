@@ -490,8 +490,8 @@ namespace ApiBibliotecas.Repositorys
             reserva.ID_PRESTAMO = nuevoId;
             reserva.DEVUELTO = true;
             reserva.COMPLETADO = false;
-            reserva.FECHA_FIN = DateTime.Parse(reserva.FECHA_FIN.ToString("yyyy-MM-dd"));
-            reserva.FECHA_INICIO = DateTime.Parse(reserva.FECHA_INICIO.ToString("yyyy-MM-dd"));
+            reserva.FECHA_FIN = reserva.FECHA_FIN.ToUniversalTime();
+            reserva.FECHA_INICIO = reserva.FECHA_INICIO.ToUniversalTime();
             this.context.Reservas.Add(reserva);
             await this.context.SaveChangesAsync();
         }
